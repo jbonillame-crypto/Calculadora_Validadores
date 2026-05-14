@@ -15,29 +15,40 @@
         .input-excel:focus { background: #f1f5f9; border: 1px solid #3b82f6; }
         .header-blue { background: #1e3a8a; color: white; padding: 8px; text-align: center; font-weight: bold; font-size: 0.9rem; }
         .label-dia { background: #f8fafc; font-weight: bold; font-size: 0.75rem; color: #64748b; padding-left: 8px; }
-        .resumen-card { background: #ffffff; border: 2px solid #1e3a8a; border-radius: 8px; overflow: hidden; }
+        .bg-resaltado { background-color: #f8fafc; font-weight: bold; font-size: 0.8rem; }
+        .bg-verde-claro { background-color: #dcfce7; }
     </style>
 </head>
 <body id="mainBody">
     <div class="max-w-md mx-auto space-y-4 p-2 pb-20">
         
         <div class="bg-white shadow rounded-lg overflow-hidden border border-gray-300">
-            <div class="header-blue uppercase tracking-wider">Costeo de Productos - Margen</div>
+            <div class="header-blue uppercase tracking-wider">Costeo de Productos Top - Margen</div>
             <table class="excel-table">
                 <thead>
                     <tr>
-                        <th width="40%">PRODUCTO</th>
-                        <th width="30%">COSTO</th>
-                        <th width="30%">VENTA</th>
+                        <th width="35%">PRODUCTO</th>
+                        <th width="20%">COSTO</th>
+                        <th width="20%">VENTA</th>
+                        <th width="25%">MARGEN</th>
                     </tr>
                 </thead>
                 <tbody id="tablaProductos"></tbody>
+                <tfoot>
+                    <tr class="bg-blue-50 font-bold">
+                        <td colspan="3" class="text-right p-2 text-xs">PROMEDIO:</td>
+                        <td id="promedioMargen" class="text-center text-blue-800 text-sm">0%</td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
 
         <div class="bg-white shadow rounded-lg overflow-hidden border border-gray-300">
-            <div class="header-blue uppercase tracking-wider text-xs">Ventas Diarias (7 Días)</div>
+            <div class="header-blue uppercase tracking-wider text-xs">Ventas Diarias (Por dias: buenos, malos y regulares)</div>
             <table class="excel-table">
+                <thead>
+                    <tr><th width="50%">DÍA</th><th width="50%">VENTA ($)</th></tr>
+                </thead>
                 <tbody>
                     <tr><td class="label-dia">Lunes</td><td><input type="number" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
                     <tr><td class="label-dia">Martes</td><td><input type="number" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
@@ -47,39 +58,72 @@
                     <tr><td class="label-dia">Sábado</td><td><input type="number" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
                     <tr><td class="label-dia">Domingo</td><td><input type="number" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
                 </tbody>
+                <tfoot class="border-t-2 border-gray-400">
+                    <tr class="bg-resaltado">
+                        <td class="p-2 text-xxs uppercase">Prom x día:</td>
+                        <td id="calcPromDia" class="text-center text-sm font-bold">$0</td>
+                    </tr>
+                    <tr class="bg-resaltado text-blue-800">
+                        <td class="p-2 text-xxs uppercase">Prom x Semana_d:</td>
+                        <td id="calcPromSem" class="text-center text-sm font-bold">$0</td>
+                    </tr>
+                    <tr class="bg-gray-100 text-gray-800 border-t">
+                        <td class="p-2 text-xxs uppercase italic">Prom x Mes_d:</td>
+                        <td id="calcPromMes" class="text-center text-sm font-bold">$0</td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
 
-        <div class="resumen-card shadow-lg">
-            <div class="header-blue">RESUMEN DE RESULTADOS</div>
-            <div class="p-4 space-y-3">
-                <div class="flex justify-between items-center border-b pb-2">
-                    <span class="text-xs font-bold text-gray-600">DÍAS DEL MES:</span>
-                    <input type="number" id="diasMes" value="30" class="w-16 p-1 border rounded text-center font-bold text-blue-700" oninput="calcularTodo()">
-                </div>
-                <div class="flex justify-between items-center border-b pb-2">
-                    <span class="text-xs font-bold text-gray-600">MARGEN PROMEDIO:</span>
-                    <span id="resMargen" class="font-bold text-blue-800">0%</span>
-                </div>
-                <div class="flex justify-between items-center border-b pb-2">
-                    <span class="text-xs font-bold text-gray-600">PROMEDIO DIARIO:</span>
-                    <span id="resDiario" class="font-bold text-green-700">$0.00</span>
-                </div>
-                <div class="flex justify-between items-center pt-1">
-                    <span class="text-xs font-bold text-gray-800">VENTA MENSUAL:</span>
-                    <span id="resMensual" class="text-xl font-black text-green-800">$0.00</span>
-                </div>
-            </div>
+        <div class="bg-white shadow rounded-lg overflow-hidden border border-gray-300">
+            <div class="header-blue uppercase tracking-wider text-xs">Promedios de Cuatro Semanas</div>
+            <table class="excel-table">
+                <thead>
+                    <tr><th width="25%">SEMANA</th><th width="35%">PROM. FIJO</th><th width="40%">VALOR EDITABLE</th></tr>
+                </thead>
+                <tbody id="tablaSemanas"></tbody>
+                <tfoot class="border-t-2">
+                    <tr class="bg-gray-50 font-bold">
+                        <td class="p-2 text-xxs uppercase">Prom x Semana:</td>
+                        <td id="promTotalCalculado" class="text-center text-xs text-gray-600">$0</td>
+                        <td id="promTotalEditable" class="text-center text-xs text-green-700">$0</td>
+                    </tr>
+                    <tr class="bg-yellow-50 font-bold border-t">
+                        <td class="p-2 text-xxs uppercase">Prom x Mes_s:</td>
+                        <td id="promMesCalculado" class="text-center text-xs text-gray-500">$0</td>
+                        <td id="promMesEditable" class="text-center text-xs text-orange-700 font-black">$0</td>
+                    </tr>
+                </tfoot>
+            </table>
         </div>
 
-        <button onclick="copiarResumen()" class="w-full bg-blue-700 text-white py-4 rounded-lg font-bold shadow-md active:bg-blue-800 transition-colors">
-            📋 COPIAR DATOS PARA REPORTE
-        </button>
+        <div class="bg-white shadow rounded-lg overflow-hidden border border-gray-300">
+            <div class="bg-green-600 text-white p-2 text-center font-bold text-xs uppercase tracking-widest">Resumen Promedios diarios Ponderados</div>
+            <table class="excel-table">
+                <tbody>
+                    <tr><td class="label-dia w-1/2">Promedio x Dia</td><td id="resumenPromDia" class="text-center font-bold text-sm">$0</td></tr>
+                    <tr><td class="label-dia">Promedio x Semana</td><td id="resumenPromSem" class="text-center font-bold text-sm">$0</td></tr>
+                    <tr class="bg-verde-claro">
+                        <td class="label-dia bg-transparent">Días del mes</td>
+                        <td><input type="number" id="inputDiasMes" class="input-excel bg-transparent font-bold" value="30" oninput="calcularTodo()"></td>
+                    </tr>
+                    <tr class="bg-gray-100">
+                        <td class="p-2 text-xs font-black uppercase">Promedio x Mes_d</td>
+                        <td id="resumenPromMes" class="text-center font-black text-blue-900 text-base">$0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+            <button onclick="copiarResumen()" class="bg-blue-700 text-white py-4 rounded-lg font-bold shadow-md text-xs uppercase">📋 Copiar Datos</button>
+            <button onclick="limpiarCalculadora()" class="bg-red-600 text-white py-4 rounded-lg font-bold shadow-md text-xs uppercase">🗑️ Nuevo Cálculo</button>
+        </div>
     </div>
 
     <script>
-        // --- SEGURIDAD ---
         const CLAVE_ACCESO = "Validacion2026";
+        
         function validarAcceso() {
             if (localStorage.getItem("acceso_autorizado") !== "true") {
                 let pass = prompt("Clave de acceso:");
@@ -89,53 +133,104 @@
                 } else { alert("Error"); window.location.reload(); }
             } else { document.getElementById('mainBody').style.display = "block"; }
         }
-        window.onload = validarAcceso;
+        window.onload = () => { validarAcceso(); inicializarTablas(); };
 
-        // --- GENERAR TABLA PRODUCTOS ---
-        const tablaProd = document.getElementById('tablaProductos');
-        for(let i=1; i<=5; i++) {
-            tablaProd.innerHTML += `<tr>
-                <td class="text-xxs text-gray-400 font-bold px-2 uppercase">Producto ${i}</td>
-                <td><input type="number" class="input-excel costo" oninput="calcularTodo()"></td>
-                <td><input type="number" class="input-excel venta" oninput="calcularTodo()"></td>
-            </tr>`;
+        function inicializarTablas() {
+            const tablaProd = document.getElementById('tablaProductos');
+            tablaProd.innerHTML = "";
+            for(let i=1; i<=5; i++) {
+                tablaProd.innerHTML += `<tr>
+                    <td class="text-xxs text-gray-400 font-bold px-2 uppercase">Prod ${i}</td>
+                    <td><input type="number" class="input-excel costo" oninput="calcularTodo()"></td>
+                    <td><input type="number" class="input-excel venta" oninput="calcularTodo()"></td>
+                    <td class="text-center text-xs font-bold text-blue-600 m-fila">0%</td>
+                </tr>`;
+            }
+
+            const tablaSem = document.getElementById('tablaSemanas');
+            tablaSem.innerHTML = "";
+            for(let i=1; i<=4; i++) {
+                tablaSem.innerHTML += `<tr>
+                    <td class="text-center font-bold text-gray-500 text-xs">Semana ${i}</td>
+                    <td class="text-center text-xs text-gray-600 s-calc">$0</td>
+                    <td class="bg-green-50"><input type="number" class="input-excel s-edit" oninput="calcularTodo()" placeholder="$"></td>
+                </tr>`;
+            }
         }
 
-        // --- LÓGICA DE CÁLCULO ---
         function calcularTodo() {
             // 1. Margen
             const costos = document.querySelectorAll('.costo');
             const ventas = document.querySelectorAll('.venta');
+            const mFilas = document.querySelectorAll('.m-fila');
             let sumaM = 0; let cantM = 0;
             costos.forEach((cInp, i) => {
-                const c = parseFloat(cInp.value) || 0;
                 const v = parseFloat(ventas[i].value) || 0;
-                if(v > 0) { sumaM += (v - c) / v; cantM++; }
+                if(v > 0) { 
+                    const c = parseFloat(cInp.value) || 0;
+                    const m = (v - c) / v;
+                    mFilas[i].innerText = (m * 100).toFixed(0) + "%";
+                    sumaM += m; cantM++; 
+                } else { mFilas[i].innerText = "0%"; }
             });
-            const margenFinal = cantM > 0 ? (sumaM/cantM)*100 : 0;
-            document.getElementById('resMargen').innerText = margenFinal.toFixed(2) + "%";
+            const margenFinal = cantM > 0 ? ((sumaM/cantM)*100).toFixed(0) + "%" : "0%";
+            document.getElementById('promedioMargen').innerText = margenFinal;
 
-            // 2. Venta Diaria
+            // 2. Ventas Diarias (Sección 2)
             const inputsDias = document.querySelectorAll('.v-dia');
-            let sumaV = 0; let cantV = 0;
+            let sumaV = 0; let cantDiasReg = 0;
             inputsDias.forEach(input => {
                 const val = parseFloat(input.value);
-                if(!isNaN(val) && val > 0) { sumaV += val; cantV++; }
+                if(!isNaN(val) && val > 0) { sumaV += val; cantDiasReg++; }
             });
-            const promDiario = cantV > 0 ? (sumaV / cantV) : 0;
-            document.getElementById('resDiario').innerText = "$" + promDiario.toFixed(2);
 
-            // 3. Venta Mensual
-            const dias = parseInt(document.getElementById('diasMes').value) || 0;
-            const mensual = promDiario * dias;
-            document.getElementById('resMensual').innerText = "$" + mensual.toFixed(2);
+            const promDiario = cantDiasReg > 0 ? (sumaV / cantDiasReg) : 0;
+            const promSem_d = promDiario * cantDiasReg;
+            const promMes_d = promSem_d * 4;
+
+            document.getElementById('calcPromDia').innerText = "$" + promDiario.toFixed(0);
+            document.getElementById('calcPromSem').innerText = "$" + promSem_d.toFixed(0);
+            document.getElementById('calcPromMes').innerText = "$" + promMes_d.toFixed(0);
+
+            // 3. Sincronización Tabla Semanas (Sección 3)
+            document.querySelectorAll('.s-calc').forEach(td => td.innerText = "$" + promSem_d.toFixed(0));
+            document.getElementById('promTotalCalculado').innerText = "$" + promSem_d.toFixed(0);
+            document.getElementById('promMesCalculado').innerText = "$" + (promSem_d * 4).toFixed(0);
+
+            const sEdits = document.querySelectorAll('.s-edit');
+            let sumaE = 0; let cantE = 0;
+            sEdits.forEach(input => {
+                const val = parseFloat(input.value);
+                if(!isNaN(val) && val > 0) { sumaE += val; cantE++; }
+            });
+            const promSemE = cantE > 0 ? (sumaE / cantE) : 0;
+            document.getElementById('promTotalEditable').innerText = "$" + promSemE.toFixed(0);
+            document.getElementById('promMesEditable').innerText = "$" + (promSemE * 4).toLocaleString();
+
+            // 4. Cuadro Resumen Final (Sección 4)
+            const dMes = parseFloat(document.getElementById('inputDiasMes').value) || 0;
+            const finalMes = promDiario * dMes;
+
+            document.getElementById('resumenPromDia').innerText = "$" + promDiario.toFixed(0);
+            document.getElementById('resumenPromSem').innerText = "$" + promSem_d.toFixed(0);
+            document.getElementById('resumenPromMes').innerText = "$" + finalMes.toLocaleString(undefined, {maximumFractionDigits: 0});
+        }
+
+        function limpiarCalculadora() {
+            if(confirm("¿Limpiar todos los datos?")) {
+                document.querySelectorAll('input').forEach(i => { if(i.id !== 'inputDiasMes') i.value = ""; });
+                calcularTodo();
+            }
         }
 
         function copiarResumen() {
-            const m = document.getElementById('resMargen').innerText;
-            const d = document.getElementById('resDiario').innerText;
-            const mes = document.getElementById('resMensual').innerText;
-            const texto = `RESULTADOS DE VALIDACIÓN:\n- Margen Promedio: ${m}\n- Venta Diaria: ${d}\n- Venta Mensual Est: ${mes}`;
+            const m = document.getElementById('promedioMargen').innerText;
+            const pD = document.getElementById('resumenPromDia').innerText;
+            const pS = document.getElementById('resumenPromSem').innerText;
+            const dM = document.getElementById('inputDiasMes').value;
+            const pM = document.getElementById('resumenPromMes').innerText;
+            
+            const texto = `RESUMEN DE VENTAS MENSUALES Y MARGEN DE GANANCIA:\n- Margen Promedio: ${m}\n- Promedio x Dia: ${pD}\n- Promedio x Semana: ${pS}\n- Días del Mes: ${dM}\n- PROMED X MES: ${pM}`;
             navigator.clipboard.writeText(texto);
             alert("¡Copiado con éxito!");
         }
