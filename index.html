@@ -1,0 +1,196 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Validación</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f0f2f5; font-family: sans-serif; display: none; } /* Oculto hasta validar pass */
+        .excel-table { border-collapse: collapse; width: 100%; background: white; }
+        .excel-table th { background: #e2e8f0; border: 1px solid #cbd5e1; padding: 6px; font-size: 0.7rem; color: #475569; }
+        .excel-table td { border: 1px solid #cbd5e1; padding: 2px; }
+        .input-excel { width: 100%; border: none; outline: none; padding: 6px; text-align: center; font-size: 0.85rem; }
+        .input-excel:focus { background: #f1f5f9; border: 1px solid #3b82f6; }
+        .header-blue { background: #1e3a8a; color: white; padding: 8px; text-align: center; font-weight: bold; font-size: 0.9rem; }
+        .label-dia { background: #f8fafc; font-weight: bold; font-size: 0.75rem; color: #64748b; padding-left: 8px; }
+    </style>
+</head>
+<body id="mainBody">
+    <div class="max-w-md mx-auto space-y-4 p-2">
+        
+        <div class="bg-white shadow rounded-lg overflow-hidden border border-gray-300">
+            <div class="header-blue uppercase tracking-wider">Costeo de Productos - Margen</div>
+            <table class="excel-table">
+                <thead>
+                    <tr>
+                        <th width="40%">PRODUCTO</th>
+                        <th width="20%">COSTO</th>
+                        <th width="20%">VENTA</th>
+                        <th width="20%">MARGEN</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaProductos">
+                    </tbody>
+                <tfoot>
+                    <tr class="bg-blue-50 font-bold">
+                        <td colspan="3" class="text-right p-2 text-xs">PROMEDIO MARGEN:</td>
+                        <td id="promedioMargen" class="text-center text-blue-800 text-sm">0%</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="bg-white shadow rounded-lg overflow-hidden border border-gray-300">
+            <div class="header-blue uppercase tracking-wider text-xs">Estimación de Ingresos Semanales</div>
+            <table class="excel-table">
+                <thead>
+                    <tr>
+                        <th width="40%">DÍA</th>
+                        <th width="60%">VENTA DIARIA ($)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td class="label-dia">Lunes</td><td><input type="number" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
+                    <tr><td class="label-dia">Martes</td><td><input type="number" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
+                    <tr><td class="label-dia">Miércoles</td><td><input type="number" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
+                    <tr><td class="label-dia">Jueves</td><td><input type="number" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
+                    <tr><td class="label-dia">Viernes</td><td><input type="number" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
+                    <tr><td class="label-dia">Sábado</td><td><input type="number" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
+                    <tr><td class="label-dia">Domingo</td><td><input type="number" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
+                </tbody>
+                <tfoot>
+                    <tr class="bg-green-50 font-bold border-t-2 border-gray-400">
+                        <td class="p-2 text-xs text-right">PROMEDIO DIARIO:</td>
+                        <td id="promedioDiario" class="text-center text-green-800">$0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <table class="excel-table border-t">
+                <thead class="bg-gray-50 text-xxs">
+                    <tr>
+                        <th>PERIODO</th>
+                        <th>VENTA EST.</th>
+                        <th>ACUMULADO</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaSemanas">
+                    </tbody>
+            </table>
+        </div>
+
+        <button onclick="copiarResumen()" class="w-full bg-blue-700 text-white py-3 rounded-lg font-bold shadow-md active:bg-blue-800 transition-colors text-sm">
+            📋 COPIAR RESUMEN DE VALIDACIÓN
+        </button>
+    </div>
+
+    <script>
+        // --- 1. BLOQUE DE SEGURIDAD (CONTRASEÑA) ---
+        const CLAVE_ACCESO = "Validacion2026"; // <--- PUEDES CAMBIAR TU CLAVE AQUÍ
+        
+        function validarAcceso() {
+            let acceso = localStorage.getItem("acceso_autorizado");
+            if (acceso !== "true") {
+                let pass = prompt("Introduzca la clave de acceso para Validadores:");
+                if (pass === CLAVE_ACCESO) {
+                    localStorage.setItem("acceso_autorizado", "true");
+                    mostrarApp();
+                } else {
+                    alert("Clave incorrecta.");
+                    window.location.reload();
+                }
+            } else {
+                mostrarApp();
+            }
+        }
+
+        function mostrarApp() {
+            document.getElementById('mainBody').style.display = "block";
+        }
+
+        window.onload = validarAcceso;
+
+        // --- 2. GENERACIÓN DE FILAS ---
+        const tablaProd = document.getElementById('tablaProductos');
+        for(let i=1; i<=5; i++) {
+            tablaProd.innerHTML += `
+                <tr>
+                    <td class="text-xxs text-gray-400 font-bold px-2">PROD ${i}</td>
+                    <td><input type="number" class="input-excel costo" oninput="calcularTodo()"></td>
+                    <td><input type="number" class="input-excel venta" oninput="calcularTodo()"></td>
+                    <td class="text-center font-bold text-xs text-blue-600 margen-fila">0%</td>
+                </tr>`;
+        }
+
+        const tablaSem = document.getElementById('tablaSemanas');
+        for(let i=1; i<=4; i++) {
+            tablaSem.innerHTML += `
+                <tr>
+                    <td class="text-center font-bold text-gray-500 text-xs">Semana ${i}</td>
+                    <td class="text-center v-sem text-xs">$0.00</td>
+                    <td class="text-center a-sem text-xs font-bold text-gray-700">$0.00</td>
+                </tr>`;
+        }
+
+        // --- 3. LÓGICA DE CÁLCULO ---
+        function calcularTodo() {
+            // Márgenes
+            const costos = document.querySelectorAll('.costo');
+            const ventas = document.querySelectorAll('.venta');
+            const margenesFila = document.querySelectorAll('.margen-fila');
+            let sumaM = 0; let cantM = 0;
+
+            costos.forEach((cInp, i) => {
+                const c = parseFloat(cInp.value) || 0;
+                const v = parseFloat(ventas[i].value) || 0;
+                if(v > 0) {
+                    const m = (v - c) / v;
+                    margenesFila[i].innerText = (m * 100).toFixed(1) + "%";
+                    sumaM += m; cantM++;
+                } else { margenesFila[i].innerText = "0%"; }
+            });
+            document.getElementById('promedioMargen').innerText = cantM > 0 ? ((sumaM/cantM)*100).toFixed(2) + "%" : "0%";
+
+            // Ventas 7 días (ignora vacíos)
+            const inputsDias = document.querySelectorAll('.v-dia');
+            let sumaV = 0; let cantV = 0;
+            inputsDias.forEach(input => {
+                const val = parseFloat(input.value);
+                if(!isNaN(val) && val > 0) {
+                    sumaV += val;
+                    cantV++;
+                }
+            });
+
+            const promDiario = cantV > 0 ? (sumaV / cantV) : 0;
+            document.getElementById('promedioDiario').innerText = "$" + promDiario.toFixed(2);
+
+            // Proyección Semanal (Promedio diario * 7)
+            const semanal = promDiario * 7;
+            const vSems = document.querySelectorAll('.v-sem');
+            const aSems = document.querySelectorAll('.a-sem');
+            
+            vSems.forEach((td, i) => {
+                td.innerText = "$" + semanal.toFixed(2);
+                aSems[i].innerText = "$" + (semanal * (i + 1)).toFixed(2);
+            });
+        }
+
+        function copiarResumen() {
+            const m = document.getElementById('promedioMargen').innerText;
+            const d = document.getElementById('promedioDiario').innerText;
+            const t = document.querySelectorAll('.a-sem')[3].innerText;
+            const texto = `VALIDACIÓN:\n- Margen: ${m}\n- Prom. Diario: ${d}\n- Est. Mensual: ${t}`;
+            navigator.clipboard.writeText(texto);
+            alert("¡Copiado!");
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
+        }
+    </script>
+</body>
+</html>
