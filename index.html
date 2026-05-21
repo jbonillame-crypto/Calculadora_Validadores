@@ -3,34 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Validación</title>
-    <link rel="manifest" href="manifest.json">
+    <title>Calculadora de Validación Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #f0f2f5; font-family: sans-serif; display: none; }
+        body { 
+            background-color: #f8fafc; 
+            font-family: sans-serif; 
+            display: none; 
+            /* BLOQUEO DE GESTO DESLIZAR PARA RECARGAR */
+            overscroll-behavior-y: contain; 
+        }
         .excel-table { border-collapse: collapse; width: 100%; background: white; }
-        .excel-table th { background: #e2e8f0; border: 1px solid #cbd5e1; padding: 6px; font-size: 0.7rem; color: #475569; }
+        .excel-table th { background: #e2e8f0; border: 1px solid #cbd5e1; padding: 6px; font-size: 0.7rem; color: #475569; text-transform: uppercase; }
         .excel-table td { border: 1px solid #cbd5e1; padding: 2px; }
-        .input-excel { width: 100%; border: none; outline: none; padding: 6px; text-align: center; font-size: 0.85rem; }
-        .input-excel:focus { background: #f1f5f9; border: 1px solid #3b82f6; }
-        .header-blue { background: #1e3a8a; color: white; padding: 8px; text-align: center; font-weight: bold; font-size: 0.9rem; }
-        .label-dia { background: #f8fafc; font-weight: bold; font-size: 0.75rem; color: #64748b; padding-left: 8px; }
-        .bg-resaltado { background-color: #f8fafc; font-weight: bold; font-size: 0.8rem; }
-        .bg-verde-claro { background-color: #dcfce7; }
+        .input-excel { width: 100%; border: none; outline: none; padding: 8px; text-align: center; font-size: 0.85rem; }
+        .input-excel:focus { background: #f1f5f9; border: 2px solid #3b82f6; border-radius: 2px; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        .header-blue { background: #1e3a8a; color: white; padding: 10px; text-align: center; font-weight: bold; font-size: 0.85rem; text-transform: uppercase; }
+        .label-cell { background: #f8fafc; font-weight: bold; font-size: 0.75rem; color: #64748b; padding-left: 8px; }
+        .btn-add { background-color: #3b82f6; color: white; padding: 6px 16px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin: 8px; cursor: pointer; }
+        
+        .hidden-section { display: none; }
+        .tab-btn { transition: all 0.2s; cursor: pointer; font-size: 10px; text-transform: uppercase; color: #64748b; background: #f1f5f9; }
+        .tab-active { background-color: #1e3a8a !important; color: white !important; font-weight: bold; }
+        
+        .bg-resumen { background-color: #f1f5f9; font-weight: bold; }
+        .suma-col { color: #2563eb; font-weight: bold; background: #f0f7ff; }
+        
+        .section-container { 
+            background: white; border: 1px solid #cbd5e1; border-left: 6px solid #1e3a8a; 
+            border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); margin-bottom: 24px;
+        }
+        
+        .div-bar { background-color: #334155; color: white; padding: 8px; text-align: center; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .client-info-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; padding: 10px; background: #f1f5f9; border-bottom: 1px solid #cbd5e1; }
+        .input-info { border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px; font-size: 11px; text-align: center; font-weight: bold; color: #1e293b; }
+        .text-utilidad { font-weight: 800; font-size: 1.1rem; }
+        .pendiente { color: #94a3b8; font-style: italic; font-size: 0.8rem; }
     </style>
 </head>
 <body id="mainBody">
-    <div class="max-w-md mx-auto space-y-4 p-2 pb-20">
+    <div class="max-w-md mx-auto p-4 pb-24">
         
-        <div class="bg-white shadow rounded-lg overflow-hidden border border-gray-300">
-            <div class="header-blue uppercase tracking-wider">Costeo de Productos Top - Margen</div>
+        <div class="section-container">
+            <div class="div-bar">CÁLCULO DE MARGEN DE GANANCIA</div>
+            <div class="client-info-grid">
+                <input type="text" placeholder="No. Solicitud" id="info_sol" class="input-info sync-sol" oninput="syncInputs('sol', this.value)">
+                <input type="text" placeholder="Nombre del Cliente" id="info_name" class="input-info sync-name" oninput="syncInputs('name', this.value)">
+            </div>
+            <div class="header-blue">Análisis de Costeo por Producto</div>
             <table class="excel-table">
                 <thead>
                     <tr>
-                        <th width="35%">PRODUCTO</th>
+                        <th width="30%">PRODUCTO</th>
                         <th width="20%">COSTO</th>
                         <th width="20%">VENTA</th>
-                        <th width="25%">MARGEN</th>
+                        <th width="30%">MARGEN DE GANANCIA</th>
                     </tr>
                 </thead>
                 <tbody id="tablaProductos"></tbody>
@@ -41,198 +70,351 @@
                     </tr>
                 </tfoot>
             </table>
+            <div class="flex justify-center bg-gray-50 border-t">
+                <button onclick="agregarFilaProducto(); guardarDatos();" class="btn-add">+ AGREGAR PRODUCTO</button>
+            </div>
         </div>
 
-        <div class="bg-white shadow rounded-lg overflow-hidden border border-gray-300">
-            <div class="header-blue uppercase tracking-wider text-xs">Ventas Diarias (Por dias: buenos, malos y regulares)</div>
+        <div class="section-container" style="border-left-color: #0369a1;">
+            <div class="div-bar">CÁLCULO DE VENTAS</div>
+            <div class="client-info-grid">
+                <input type="text" placeholder="No. Solicitud" class="input-info sync-sol" oninput="syncInputs('sol', this.value)">
+                <input type="text" placeholder="Nombre del Cliente" class="input-info sync-name" oninput="syncInputs('name', this.value)">
+            </div>
+            <div class="flex bg-white border-b border-gray-300 text-center">
+                <div id="tabV_dias" onclick="cambiarSeccion('V', 'dias')" class="w-1/3 p-3 tab-btn tab-active">Días</div>
+                <div id="tabV_semanas" onclick="cambiarSeccion('V', 'semanas')" class="w-1/3 p-3 tab-btn border-l border-r">Semanas</div>
+                <div id="tabV_quincenas" onclick="cambiarSeccion('V', 'quincenas')" class="w-1/3 p-3 tab-btn">Quincenas</div>
+            </div>
+
+            <div id="secV_dias">
+                <table class="excel-table">
+                    <tbody>
+                        <tr><td class="label-cell">Lunes</td><td><input type="number" step="0.01" id="v_dia_0" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
+                        <tr><td class="label-cell">Martes</td><td><input type="number" step="0.01" id="v_dia_1" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
+                        <tr><td class="label-cell">Miércoles</td><td><input type="number" step="0.01" id="v_dia_2" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
+                        <tr><td class="label-cell">Jueves</td><td><input type="number" step="0.01" id="v_dia_3" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
+                        <tr><td class="label-cell">Viernes</td><td><input type="number" step="0.01" id="v_dia_4" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
+                        <tr><td class="label-cell">Sábado</td><td><input type="number" step="0.01" id="v_dia_5" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
+                        <tr><td class="label-cell">Domingo</td><td><input type="number" step="0.01" id="v_dia_6" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
+                    </tbody>
+                    <tfoot class="border-t-2 border-gray-400">
+                        <tr class="bg-blue-50"><td class="p-2 text-xs font-bold">SUMA SEMANAL:</td><td id="resV_SumaSem" class="text-center text-sm font-bold text-blue-600">$0.00</td></tr>
+                        <tr class="bg-resumen"><td class="p-2 text-xs uppercase">PROM X DIA:</td><td id="resV_PromDia" class="text-center text-sm font-bold text-gray-400">Completar</td></tr>
+                        <tr class="bg-gray-800 text-white"><td class="p-2 text-xs uppercase font-black">PROM X MES:</td><td id="resV_PromMesD" class="text-center text-sm font-black text-gray-400">Completar</td></tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div id="secV_semanas" class="hidden-section">
+                <table class="excel-table">
+                    <thead><tr><th width="40%">SEMANA</th><th width="60%">VALOR VENTAS ($)</th></tr></thead>
+                    <tbody id="bodyV_semanas"></tbody>
+                    <tfoot class="border-t-2 border-gray-400">
+                        <tr class="bg-blue-50"><td class="p-2 text-xs font-bold">PROM SEMANAL:</td><td id="resV_PromSemS" class="text-center text-sm font-bold text-blue-600">$0.00</td></tr>
+                        <tr class="bg-gray-800 text-white font-bold"><td class="p-2 text-xs uppercase font-black">PROM X MES:</td><td id="resV_PromMesS" class="text-center text-sm font-black text-gray-400">Completar</td></tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div id="secV_quincenas" class="hidden-section">
+                <table class="excel-table">
+                    <thead><tr><th width="40%">QUINCENA</th><th width="60%">VALOR VENTAS ($)</th></tr></thead>
+                    <tbody>
+                        <tr><td class="text-center font-bold text-gray-500 text-xs">Quincena 1</td><td class="bg-purple-50"><input type="number" step="0.01" id="v_quin_0" class="input-excel v-quin" oninput="calcularTodo()"></td></tr>
+                        <tr><td class="text-center font-bold text-gray-500 text-xs">Quincena 2</td><td class="bg-purple-50"><input type="number" step="0.01" id="v_quin_1" class="input-excel v-quin" oninput="calcularTodo()"></td></tr>
+                    </tbody>
+                    <tfoot class="border-t-2 border-gray-400">
+                        <tr class="bg-blue-50"><td class="p-2 text-xs font-bold">PROM QUINCENAL:</td><td id="resV_PromQuinQ" class="text-center text-sm font-bold text-blue-600">$0.00</td></tr>
+                        <tr class="bg-gray-800 text-white font-bold"><td class="p-2 text-xs uppercase font-black">PROM X MES:</td><td id="resV_PromMesQ" class="text-center text-sm font-black text-gray-400">Completar</td></tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="section-container" style="border-left-color: #6366f1;">
+            <div class="div-bar">CÁLCULO DE COSTOS OPERATIVOS</div>
+            <div class="client-info-grid">
+                <input type="text" placeholder="No. Solicitud" class="input-info sync-sol" oninput="syncInputs('sol', this.value)">
+                <input type="text" placeholder="Nombre del Cliente" class="input-info sync-name" oninput="syncInputs('name', this.value)">
+            </div>
+            <div class="flex bg-white border-b border-gray-300 text-center">
+                <div id="tabC_diario" onclick="cambiarSeccion('C', 'diario')" class="w-1/3 p-3 tab-btn tab-active">Diario</div>
+                <div id="tabC_semanal" onclick="cambiarSeccion('C', 'semanal')" class="w-1/3 p-3 tab-btn border-l border-r">Semanal</div>
+                <div id="tabC_variable" onclick="cambiarSeccion('C', 'variable')" class="w-1/3 p-3 tab-btn">Variable</div>
+            </div>
             <table class="excel-table">
-                <thead>
-                    <tr><th width="50%">DÍA</th><th width="50%">VENTA ($)</th></tr>
-                </thead>
+                <thead><tr><th width="30%">TIPO</th><th width="25%">MONTO</th><th width="20%">VECES</th><th width="25%">SUMA</th></tr></thead>
                 <tbody>
-                    <tr><td class="label-dia">Lunes</td><td><input type="number" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
-                    <tr><td class="label-dia">Martes</td><td><input type="number" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
-                    <tr><td class="label-dia">Miércoles</td><td><input type="number" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
-                    <tr><td class="label-dia">Jueves</td><td><input type="number" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
-                    <tr><td class="label-dia">Viernes</td><td><input type="number" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
-                    <tr><td class="label-dia">Sábado</td><td><input type="number" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
-                    <tr><td class="label-dia">Domingo</td><td><input type="number" class="input-excel v-dia" oninput="calcularTodo()"></td></tr>
+                    <tr id="rowC_diario">
+                        <td class="label-cell">DIARIO</td>
+                        <td><input type="number" step="0.01" id="montoC_dia" class="input-excel" oninput="calcularTodo()"></td>
+                        <td><input type="number" id="vecesC_dia" class="input-excel" oninput="calcularTodo()"></td>
+                        <td id="sumaC_dia" class="text-center text-sm suma-col">$0.00</td>
+                    </tr>
+                    <tr id="rowC_semanal" class="hidden-section">
+                        <td class="label-cell">SEMANAL</td>
+                        <td><input type="number" step="0.01" id="montoC_sem" class="input-excel" oninput="calcularTodo()"></td>
+                        <td class="bg-gray-100"></td>
+                        <td id="sumaC_sem" class="text-center text-sm suma-col">$0.00</td>
+                    </tr>
+                    <tr id="rowC_variable" class="hidden-section">
+                        <td class="label-cell">VARIABLE</td>
+                        <td><input type="number" step="0.01" id="montoC_var" class="input-excel" oninput="calcularTodo()"></td>
+                        <td><input type="number" id="vecesC_var" class="input-excel" oninput="calcularTodo()"></td>
+                        <td id="sumaC_var" class="text-center text-sm suma-col">$0.00</td>
+                    </tr>
                 </tbody>
-                <tfoot class="border-t-2 border-gray-400">
-                    <tr class="bg-resaltado">
-                        <td class="p-2 text-xxs uppercase">Prom x día:</td>
-                        <td id="calcPromDia" class="text-center text-sm font-bold">$0</td>
-                    </tr>
-                    <tr class="bg-resaltado text-blue-800">
-                        <td class="p-2 text-xxs uppercase">Prom x Semana_d:</td>
-                        <td id="calcPromSem" class="text-center text-sm font-bold">$0</td>
-                    </tr>
-                    <tr class="bg-gray-100 text-gray-800 border-t">
-                        <td class="p-2 text-xxs uppercase italic">Prom x Mes_d:</td>
-                        <td id="calcPromMes" class="text-center text-sm font-bold">$0</td>
+                <tfoot>
+                    <tr class="bg-gray-800 text-white font-bold">
+                        <td colspan="3" class="p-3 text-xs uppercase">PROMEDIO COSTO MENSUAL:</td>
+                        <td id="resC_TotalMensual" class="text-center text-sm font-black">$0.00</td>
                     </tr>
                 </tfoot>
             </table>
         </div>
 
-        <div class="bg-white shadow rounded-lg overflow-hidden border border-gray-300">
-            <div class="header-blue uppercase tracking-wider text-xs">Promedios de Cuatro Semanas</div>
-            <table class="excel-table">
-                <thead>
-                    <tr><th width="25%">SEMANA</th><th width="35%">PROM. FIJO</th><th width="40%">VALOR EDITABLE</th></tr>
-                </thead>
-                <tbody id="tablaSemanas"></tbody>
-                <tfoot class="border-t-2">
-                    <tr class="bg-gray-50 font-bold">
-                        <td class="p-2 text-xxs uppercase">Prom x Semana:</td>
-                        <td id="promTotalCalculado" class="text-center text-xs text-gray-600">$0</td>
-                        <td id="promTotalEditable" class="text-center text-xs text-green-700">$0</td>
-                    </tr>
-                    <tr class="bg-yellow-50 font-bold border-t">
-                        <td class="p-2 text-xxs uppercase">Prom x Mes_s:</td>
-                        <td id="promMesCalculado" class="text-center text-xs text-gray-500">$0</td>
-                        <td id="promMesEditable" class="text-center text-xs text-orange-700 font-black">$0</td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-
-        <div class="bg-white shadow rounded-lg overflow-hidden border border-gray-300">
-            <div class="bg-green-600 text-white p-2 text-center font-bold text-xs uppercase tracking-widest">Resumen Promedios diarios Ponderados</div>
+        <div class="section-container" style="border-left-color: #166534; border-left-width: 10px;">
+            <div class="div-bar" style="background: #166534;">RESULTADO FINAL</div>
             <table class="excel-table">
                 <tbody>
-                    <tr><td class="label-dia w-1/2">Promedio x Dia</td><td id="resumenPromDia" class="text-center font-bold text-sm">$0</td></tr>
-                    <tr><td class="label-dia">Promedio x Semana</td><td id="resumenPromSem" class="text-center font-bold text-sm">$0</td></tr>
-                    <tr class="bg-verde-claro">
-                        <td class="label-dia bg-transparent">Días del mes</td>
-                        <td><input type="number" id="inputDiasMes" class="input-excel bg-transparent font-bold" value="30" oninput="calcularTodo()"></td>
+                    <tr>
+                        <td class="label-cell p-4 text-xs">GANANCIA BRUTA (V-C):</td>
+                        <td id="resFinal_GananciaBruta" class="text-center text-utilidad pendiente">Esperando datos...</td>
                     </tr>
-                    <tr class="bg-gray-100">
-                        <td class="p-2 text-xs font-black uppercase">Promedio x Mes_d</td>
-                        <td id="resumenPromMes" class="text-center font-black text-blue-900 text-base">$0</td>
+                    <tr class="bg-green-50">
+                        <td class="label-cell p-4 text-xs" style="color: #166534;">MARGEN GLOBAL:</td>
+                        <td id="resFinal_MargenGlobal" class="text-center font-black text-2xl pendiente" style="color: #166534;">--</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <div class="grid grid-cols-2 gap-2">
-            <button onclick="copiarResumen()" class="bg-blue-700 text-white py-4 rounded-lg font-bold shadow-md text-xs uppercase">📋 Copiar Datos</button>
-            <button onclick="limpiarCalculadora()" class="bg-red-600 text-white py-4 rounded-lg font-bold shadow-md text-xs uppercase">🗑️ Nuevo Cálculo</button>
-        </div>
+        <button onclick="limpiarTodo()" class="w-full bg-red-600 text-white py-4 rounded-lg font-bold shadow-md text-xs uppercase active:bg-red-700">
+            🗑️ Nuevo Cálculo
+        </button>
     </div>
 
     <script>
-        const CLAVE_ACCESO = "Validacion2026";
-        
-        function validarAcceso() {
-            if (localStorage.getItem("acceso_autorizado") !== "true") {
-                let pass = prompt("Clave de acceso:");
-                if (pass === CLAVE_ACCESO) {
-                    localStorage.setItem("acceso_autorizado", "true");
-                    document.getElementById('mainBody').style.display = "block";
-                } else { alert("Error"); window.location.reload(); }
-            } else { document.getElementById('mainBody').style.display = "block"; }
+        const CLAVE = "Validacion2026";
+        const STORAGE_KEY = "CALC_APP_DATA_JOAQUIN";
+        let modoV = 'dias', modoC = 'diario';
+        let ventasMensualesGlobal = 0, costosMensualesGlobal = 0;
+
+        window.onbeforeunload = function() { return "¿Deseas salir?"; };
+
+        window.onload = () => {
+            if (localStorage.getItem("auth") !== "true") {
+                if (prompt("Clave:") === CLAVE) { 
+                    localStorage.setItem("auth", "true"); 
+                    document.getElementById('mainBody').style.display="block"; 
+                } else { window.location.reload(); }
+            } else { document.getElementById('mainBody').style.display="block"; }
+            init();
+            cargarDatos();
+        };
+
+        function syncInputs(type, value) {
+            const className = type === 'sol' ? '.sync-sol' : '.sync-name';
+            document.querySelectorAll(className).forEach(input => input.value = value);
+            guardarDatos();
         }
-        window.onload = () => { validarAcceso(); inicializarTablas(); };
 
-        function inicializarTablas() {
-            const tablaProd = document.getElementById('tablaProductos');
-            tablaProd.innerHTML = "";
-            for(let i=1; i<=5; i++) {
-                tablaProd.innerHTML += `<tr>
-                    <td class="text-xxs text-gray-400 font-bold px-2 uppercase">Prod ${i}</td>
-                    <td><input type="number" class="input-excel costo" oninput="calcularTodo()"></td>
-                    <td><input type="number" class="input-excel venta" oninput="calcularTodo()"></td>
-                    <td class="text-center text-xs font-bold text-blue-600 m-fila">0%</td>
-                </tr>`;
-            }
-
-            const tablaSem = document.getElementById('tablaSemanas');
-            tablaSem.innerHTML = "";
+        function init() {
+            const bSem = document.getElementById('bodyV_semanas');
+            bSem.innerHTML = "";
             for(let i=1; i<=4; i++) {
-                tablaSem.innerHTML += `<tr>
-                    <td class="text-center font-bold text-gray-500 text-xs">Semana ${i}</td>
-                    <td class="text-center text-xs text-gray-600 s-calc">$0</td>
-                    <td class="bg-green-50"><input type="number" class="input-excel s-edit" oninput="calcularTodo()" placeholder="$"></td>
-                </tr>`;
+                bSem.innerHTML += `<tr><td class="text-center font-bold text-gray-500 text-xs">Semana ${i}</td><td class="bg-green-50"><input type="number" step="0.01" id="v_sem_${i-1}" class="input-excel v-sem" oninput="calcularTodo()"></td></tr>`;
+            }
+            const bProd = document.getElementById('tablaProductos');
+            bProd.innerHTML = "";
+            for(let i=0; i<5; i++) agregarFilaProducto();
+        }
+
+        function cambiarSeccion(prefijo, tipo) {
+            if (prefijo === 'V') {
+                modoV = tipo;
+                ['dias', 'semanas', 'quincenas'].forEach(t => {
+                    document.getElementById(`secV_${t}`).classList.toggle('hidden-section', t !== tipo);
+                    document.getElementById(`tabV_${t}`).classList.toggle('tab-active', t === tipo);
+                });
+            } else {
+                modoC = tipo;
+                ['diario', 'semanal', 'variable'].forEach(t => {
+                    document.getElementById(`rowC_${t}`).classList.toggle('hidden-section', t !== tipo);
+                    document.getElementById(`tabC_${t}`).classList.toggle('tab-active', t === tipo);
+                });
+            }
+            calcularTodo();
+        }
+
+        function agregarFilaProducto() {
+            const index = document.querySelectorAll('#tablaProductos tr').length;
+            const f = `<tr>
+                <td><input type="text" id="p_nom_${index}" class="input-excel p-nombre font-bold text-left uppercase text-[10px]" oninput="guardarDatos()"></td>
+                <td><input type="number" step="0.01" id="p_costo_${index}" class="input-excel p-costo" oninput="calcularTodo()"></td>
+                <td><input type="number" step="0.01" id="p_venta_${index}" class="input-excel p-venta" oninput="calcularTodo()"></td>
+                <td class="text-center text-xs font-bold text-blue-600 p-margen">0%</td>
+            </tr>`;
+            document.getElementById('tablaProductos').insertAdjacentHTML('beforeend', f);
+        }
+
+        function calcularTodo() { 
+            calcularVentas(); 
+            calcularCostos(); 
+            calcularUtilidadFinal(); 
+            guardarDatos(); 
+        }
+
+        function guardarDatos() {
+            const data = {
+                info: { sol: document.getElementById('info_sol').value, name: document.getElementById('info_name').value },
+                modos: { v: modoV, c: modoC },
+                productos: [],
+                ventas: { 
+                    dias: Array.from(document.querySelectorAll('.v-dia')).map(i => i.value),
+                    semanas: Array.from(document.querySelectorAll('.v-sem')).map(i => i.value),
+                    quincenas: Array.from(document.querySelectorAll('.v-quin')).map(i => i.value)
+                },
+                costos: {
+                    mD: document.getElementById('montoC_dia').value, vD: document.getElementById('vecesC_dia').value,
+                    mS: document.getElementById('montoC_sem').value,
+                    mV: document.getElementById('montoC_var').value, vV: document.getElementById('vecesC_var').value
+                }
+            };
+            document.querySelectorAll('#tablaProductos tr').forEach(tr => {
+                data.productos.push({ n: tr.querySelector('.p-nombre').value, c: tr.querySelector('.p-costo').value, v: tr.querySelector('.p-venta').value });
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function cargarDatos() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            document.getElementById('info_sol').value = data.info.sol;
+            document.getElementById('info_name').value = data.info.name;
+            syncInputs('sol', data.info.sol);
+            syncInputs('name', data.info.name);
+            const bProd = document.getElementById('tablaProductos');
+            bProd.innerHTML = "";
+            data.productos.forEach(p => {
+                agregarFilaProducto();
+                const tr = bProd.lastElementChild;
+                tr.querySelector('.p-nombre').value = p.n;
+                tr.querySelector('.p-costo').value = p.c;
+                tr.querySelector('.p-venta').value = p.v;
+            });
+            data.ventas.dias.forEach((v, i) => { if(document.getElementById(`v_dia_${i}`)) document.getElementById(`v_dia_${i}`).value = v; });
+            data.ventas.semanas.forEach((v, i) => { if(document.getElementById(`v_sem_${i}`)) document.getElementById(`v_sem_${i}`).value = v; });
+            data.ventas.quincenas.forEach((v, i) => { if(document.getElementById(`v_quin_${i}`)) document.getElementById(`v_quin_${i}`).value = v; });
+            document.getElementById('montoC_dia').value = data.costos.mD;
+            document.getElementById('vecesC_dia').value = data.costos.vD;
+            document.getElementById('montoC_sem').value = data.costos.mS;
+            document.getElementById('montoC_var').value = data.costos.mV;
+            document.getElementById('vecesC_var').value = data.costos.vV;
+            cambiarSeccion('V', data.modos.v);
+            cambiarSeccion('C', data.modos.c);
+            calcularTodo();
+        }
+
+        function calcularVentas() {
+            ventasMensualesGlobal = 0;
+            const cs = document.querySelectorAll('.p-costo'), vs = document.querySelectorAll('.p-venta'), ms = document.querySelectorAll('.p-margen');
+            let sM = 0, cM = 0;
+            cs.forEach((c, i) => {
+                const vVal = parseFloat(vs[i].value) || 0, cVal = parseFloat(c.value) || 0;
+                if(vVal > 0) { const m = (vVal - cVal) / vVal; ms[i].innerText = Math.round(m*100) + "%"; sM += m; cM++; }
+                else ms[i].innerText = "0%";
+            });
+            document.getElementById('promedioMargen').innerText = cM > 0 ? Math.round((sM/cM)*100) + "%" : "0%";
+
+            const inD = document.querySelectorAll('.v-dia');
+            let sumD = 0, cD = 0, fullD = 0;
+            inD.forEach(i => { if(i.value !== "") { fullD++; const val = parseFloat(i.value)||0; if(val>0){ sumD += val; cD++; } } });
+            document.getElementById('resV_SumaSem').innerText = "$" + sumD.toFixed(2);
+            if(fullD === 7) {
+                const pD = cD > 0 ? sumD/cD : 0;
+                let pM = 0;
+                if(cD===7) pM=pD*30; else if(cD===6) pM=pD*26; else if(cD===5) pM=pD*22; else if(cD===4) pM=pD*18;
+                document.getElementById('resV_PromDia').innerText = "$" + pD.toFixed(2);
+                document.getElementById('resV_PromMesD').innerText = "$" + pM.toFixed(2);
+                if(modoV === 'dias') ventasMensualesGlobal = pM;
+                document.getElementById('resV_PromDia').classList.remove('text-gray-400');
+                document.getElementById('resV_PromMesD').classList.remove('text-gray-400');
+            }
+
+            const inS = document.querySelectorAll('.v-sem');
+            let sumS = 0, fullS = 0, cS = 0;
+            inS.forEach(i => { if(i.value !== "") { fullS++; const v = parseFloat(i.value)||0; sumS += v; if(v>0) cS++; } });
+            const pS = cS > 0 ? sumS/cS : 0;
+            document.getElementById('resV_PromSemS').innerText = "$" + pS.toFixed(2);
+            if(fullS === 4) {
+                document.getElementById('resV_PromMesS').innerText = "$" + sumS.toFixed(2);
+                if(modoV === 'semanas') ventasMensualesGlobal = sumS;
+                document.getElementById('resV_PromMesS').classList.remove('text-gray-400');
+            }
+
+            const inQ = document.querySelectorAll('.v-quin');
+            let sumQ = 0, fullQ = 0, cQ = 0;
+            inQ.forEach(i => { if(i.value !== "") { fullQ++; const v = parseFloat(i.value)||0; sumQ += v; if(v>0) cQ++; } });
+            const pQ = cQ > 0 ? sumQ/cQ : 0;
+            document.getElementById('resV_PromQuinQ').innerText = "$" + pQ.toFixed(2);
+            if(fullQ === 2) {
+                document.getElementById('resV_PromMesQ').innerText = "$" + sumQ.toFixed(2);
+                if(modoV === 'quincenas') ventasMensualesGlobal = sumQ;
+                document.getElementById('resV_PromMesQ').classList.remove('text-gray-400');
             }
         }
 
-        function calcularTodo() {
-            // 1. Margen
-            const costos = document.querySelectorAll('.costo');
-            const ventas = document.querySelectorAll('.venta');
-            const mFilas = document.querySelectorAll('.m-fila');
-            let sumaM = 0; let cantM = 0;
-            costos.forEach((cInp, i) => {
-                const v = parseFloat(ventas[i].value) || 0;
-                if(v > 0) { 
-                    const c = parseFloat(cInp.value) || 0;
-                    const m = (v - c) / v;
-                    mFilas[i].innerText = (m * 100).toFixed(0) + "%";
-                    sumaM += m; cantM++; 
-                } else { mFilas[i].innerText = "0%"; }
-            });
-            const margenFinal = cantM > 0 ? ((sumaM/cantM)*100).toFixed(0) + "%" : "0%";
-            document.getElementById('promedioMargen').innerText = margenFinal;
+        function calcularCostos() {
+            costosMensualesGlobal = 0;
+            let total = 0;
+            const mD = parseFloat(document.getElementById('montoC_dia').value)||0, vD = parseFloat(document.getElementById('vecesC_dia').value)||0;
+            const sumaD = mD * vD;
+            document.getElementById('sumaC_dia').innerText = "$" + sumaD.toFixed(2);
+            if(modoC === 'diario') total = sumaD * 4;
 
-            // 2. Ventas Diarias (Sección 2)
-            const inputsDias = document.querySelectorAll('.v-dia');
-            let sumaV = 0; let cantDiasReg = 0;
-            inputsDias.forEach(input => {
-                const val = parseFloat(input.value);
-                if(!isNaN(val) && val > 0) { sumaV += val; cantDiasReg++; }
-            });
+            const mS = parseFloat(document.getElementById('montoC_sem').value)||0;
+            document.getElementById('sumaC_sem').innerText = "$" + mS.toFixed(2);
+            if(modoC === 'semanal') total = mS * 4;
 
-            const promDiario = cantDiasReg > 0 ? (sumaV / cantDiasReg) : 0;
-            const promSem_d = promDiario * cantDiasReg;
-            const promMes_d = promSem_d * 4;
+            const mV = parseFloat(document.getElementById('montoC_var').value)||0, vV = parseFloat(document.getElementById('vecesC_var').value)||0;
+            const sumaV = mV * vV;
+            document.getElementById('sumaC_var').innerText = "$" + sumaV.toFixed(2);
+            if(modoC === 'variable') total = sumaV;
 
-            document.getElementById('calcPromDia').innerText = "$" + promDiario.toFixed(0);
-            document.getElementById('calcPromSem').innerText = "$" + promSem_d.toFixed(0);
-            document.getElementById('calcPromMes').innerText = "$" + promMes_d.toFixed(0);
-
-            // 3. Sincronización Tabla Semanas (Sección 3)
-            document.querySelectorAll('.s-calc').forEach(td => td.innerText = "$" + promSem_d.toFixed(0));
-            document.getElementById('promTotalCalculado').innerText = "$" + promSem_d.toFixed(0);
-            document.getElementById('promMesCalculado').innerText = "$" + (promSem_d * 4).toFixed(0);
-
-            const sEdits = document.querySelectorAll('.s-edit');
-            let sumaE = 0; let cantE = 0;
-            sEdits.forEach(input => {
-                const val = parseFloat(input.value);
-                if(!isNaN(val) && val > 0) { sumaE += val; cantE++; }
-            });
-            const promSemE = cantE > 0 ? (sumaE / cantE) : 0;
-            document.getElementById('promTotalEditable').innerText = "$" + promSemE.toFixed(0);
-            document.getElementById('promMesEditable').innerText = "$" + (promSemE * 4).toLocaleString();
-
-            // 4. Cuadro Resumen Final (Sección 4)
-            const dMes = parseFloat(document.getElementById('inputDiasMes').value) || 0;
-            const finalMes = promDiario * dMes;
-
-            document.getElementById('resumenPromDia').innerText = "$" + promDiario.toFixed(0);
-            document.getElementById('resumenPromSem').innerText = "$" + promSem_d.toFixed(0);
-            document.getElementById('resumenPromMes').innerText = "$" + finalMes.toLocaleString(undefined, {maximumFractionDigits: 0});
+            costosMensualesGlobal = total;
+            document.getElementById('resC_TotalMensual').innerText = "$" + total.toFixed(2);
         }
 
-        function limpiarCalculadora() {
-            if(confirm("¿Limpiar todos los datos?")) {
-                document.querySelectorAll('input').forEach(i => { if(i.id !== 'inputDiasMes') i.value = ""; });
-                calcularTodo();
+        function calcularUtilidadFinal() {
+            const resG = document.getElementById('resFinal_GananciaBruta');
+            const resM = document.getElementById('resFinal_MargenGlobal');
+            if(costosMensualesGlobal > 0) {
+                const ganancia = ventasMensualesGlobal - costosMensualesGlobal;
+                const margen = ventasMensualesGlobal > 0 ? (ganancia / ventasMensualesGlobal) * 100 : 0;
+                resG.innerText = "$" + ganancia.toFixed(2);
+                resG.classList.remove('pendiente');
+                resG.style.color = ganancia < 0 ? '#b91c1c' : '#166534';
+                resM.innerText = Math.round(margen) + "%";
+                resM.classList.remove('pendiente');
+            } else {
+                resG.innerText = "Esperando costo mensual...";
+                resG.classList.add('pendiente');
+                resM.innerText = "--";
+                resM.classList.add('pendiente');
             }
         }
 
-        function copiarResumen() {
-            const m = document.getElementById('promedioMargen').innerText;
-            const pD = document.getElementById('resumenPromDia').innerText;
-            const pS = document.getElementById('resumenPromSem').innerText;
-            const dM = document.getElementById('inputDiasMes').value;
-            const pM = document.getElementById('resumenPromMes').innerText;
-            
-            const texto = `RESUMEN DE VENTAS MENSUALES Y MARGEN DE GANANCIA:\n- Margen Promedio: ${m}\n- Promedio x Dia: ${pD}\n- Promedio x Semana: ${pS}\n- Días del Mes: ${dM}\n- PROMED X MES: ${pM}`;
-            navigator.clipboard.writeText(texto);
-            alert("¡Copiado con éxito!");
+        function limpiarTodo() {
+            if(confirm("¿Borrar todo permanentemente?")) { 
+                localStorage.removeItem(STORAGE_KEY);
+                document.querySelectorAll('input').forEach(i => i.value = ""); 
+                document.querySelectorAll('.suma-col').forEach(s => s.innerText = "$0.00");
+                init(); 
+                calcularTodo(); 
+            }
         }
     </script>
 </body>
