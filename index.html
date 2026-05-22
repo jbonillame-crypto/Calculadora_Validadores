@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Validación Pro</title>
+	<link rel="manifest" href="manifest.json">
+	<meta name="theme-color" content="#1e3a8a">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { 
             background-color: #f8fafc; 
             font-family: sans-serif; 
             display: none; 
-            /* BLOQUEO DE GESTO DESLIZAR PARA RECARGAR */
             overscroll-behavior-y: contain; 
         }
         .excel-table { border-collapse: collapse; width: 100%; background: white; }
@@ -59,7 +60,7 @@
                         <th width="30%">PRODUCTO</th>
                         <th width="20%">COSTO</th>
                         <th width="20%">VENTA</th>
-                        <th width="30%">MARGEN DE GANANCIA</th>
+                        <th width="30%">MARGEN</th>
                     </tr>
                 </thead>
                 <tbody id="tablaProductos"></tbody>
@@ -141,10 +142,17 @@
             <div class="flex bg-white border-b border-gray-300 text-center">
                 <div id="tabC_diario" onclick="cambiarSeccion('C', 'diario')" class="w-1/3 p-3 tab-btn tab-active">Diario</div>
                 <div id="tabC_semanal" onclick="cambiarSeccion('C', 'semanal')" class="w-1/3 p-3 tab-btn border-l border-r">Semanal</div>
-                <div id="tabC_variable" onclick="cambiarSeccion('C', 'variable')" class="w-1/3 p-3 tab-btn">Variable</div>
+                <div id="tabC_variable" onclick="cambiarSeccion('C', 'variable')" class="w-1/3 p-3 tab-btn">Mensual</div>
             </div>
             <table class="excel-table">
-                <thead><tr><th width="30%">TIPO</th><th width="25%">MONTO</th><th width="20%">VECES</th><th width="25%">SUMA</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th width="30%">TIPO</th>
+                        <th width="25%">MONTO</th>
+                        <th width="20%" id="header_veces_costo">DÍAS x SEMANA</th>
+                        <th width="25%">SUMA</th>
+                    </tr>
+                </thead>
                 <tbody>
                     <tr id="rowC_diario">
                         <td class="label-cell">DIARIO</td>
@@ -159,7 +167,7 @@
                         <td id="sumaC_sem" class="text-center text-sm suma-col">$0.00</td>
                     </tr>
                     <tr id="rowC_variable" class="hidden-section">
-                        <td class="label-cell">VARIABLE</td>
+                        <td class="label-cell">MENSUAL</td>
                         <td><input type="number" step="0.01" id="montoC_var" class="input-excel" oninput="calcularTodo()"></td>
                         <td><input type="number" id="vecesC_var" class="input-excel" oninput="calcularTodo()"></td>
                         <td id="sumaC_var" class="text-center text-sm suma-col">$0.00</td>
@@ -197,7 +205,7 @@
 
     <script>
         const CLAVE = "Validacion2026";
-        const STORAGE_KEY = "CALC_APP_DATA_JOAQUIN";
+        const STORAGE_KEY = "CALC_DATA_JOAQUIN_V4";
         let modoV = 'dias', modoC = 'diario';
         let ventasMensualesGlobal = 0, costosMensualesGlobal = 0;
 
@@ -244,6 +252,12 @@
                     document.getElementById(`rowC_${t}`).classList.toggle('hidden-section', t !== tipo);
                     document.getElementById(`tabC_${t}`).classList.toggle('tab-active', t === tipo);
                 });
+                
+                // CAMBIO DINÁMICO DEL ENCABEZADO
+                const header = document.getElementById('header_veces_costo');
+                if(tipo === 'diario') header.innerText = "DÍAS x SEMANA";
+                else if(tipo === 'variable') header.innerText = "VECES";
+                else header.innerText = "---";
             }
             calcularTodo();
         }
@@ -400,7 +414,7 @@
                 resM.innerText = Math.round(margen) + "%";
                 resM.classList.remove('pendiente');
             } else {
-                resG.innerText = "Esperando costo mensual...";
+                resG.innerText = "Esperando datos...";
                 resG.classList.add('pendiente');
                 resM.innerText = "--";
                 resM.classList.add('pendiente');
@@ -411,11 +425,39 @@
             if(confirm("¿Borrar todo permanentemente?")) { 
                 localStorage.removeItem(STORAGE_KEY);
                 document.querySelectorAll('input').forEach(i => i.value = ""); 
+                document.getElementById('resV_SumaSem').innerText = "$0.00";
+                document.getElementById('resV_PromDia').innerText = "Completar";
+                document.getElementById('resV_PromDia').classList.add('text-gray-400');
+                document.getElementById('resV_PromMesD').innerText = "Completar";
+                document.getElementById('resV_PromMesD').classList.add('text-gray-400');
+                document.getElementById('resV_PromSemS').innerText = "$0.00";
+                document.getElementById('resV_PromMesS').innerText = "Completar";
+                document.getElementById('resV_PromMesS').classList.add('text-gray-400');
+                document.getElementById('resV_PromQuinQ').innerText = "$0.00";
+                document.getElementById('resV_PromMesQ').innerText = "Completar";
+                document.getElementById('resV_PromMesQ').classList.add('text-gray-400');
                 document.querySelectorAll('.suma-col').forEach(s => s.innerText = "$0.00");
+                document.getElementById('resC_TotalMensual').innerText = "$0.00";
+                const resG = document.getElementById('resFinal_GananciaBruta');
+                const resM = document.getElementById('resFinal_MargenGlobal');
+                resG.innerText = "Esperando datos...";
+                resG.classList.add('pendiente');
+                resG.style.color = "";
+                resM.innerText = "--";
+                resM.classList.add('pendiente');
                 init(); 
                 calcularTodo(); 
             }
         }
     </script>
+	<script>
+		if ('service worker' in navigator) {
+		window.addEventListener('load', () => {
+		navigator.serviceWorker.register('./sw.js')
+			.then(reg => console.log('Service Worker registrado con éxito', reg))
+			.catch(err => console.log('Error al registrar el Service Worker', err));
+		});
+		}
+	</script>
 </body>
 </html>
